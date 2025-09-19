@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cairo Month with Suhaira - Interactive Calendar</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        @media (min-width: 768px) {
+            body {
+                padding: 20px;
+            }
+            .container {
+                border-radius: 20px;
+                padding: 30px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            }
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.5rem;
+            line-height: 1.3;
+        }
+        
+        @media (min-width: 768px) {
+            .header {
+                margin-bottom: 30px;
+                font-size: 2rem;
+            }
+        }
+        
+        .month-section {
+            margin-bottom: 30px;
+        }
+        
+        .month-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 8px;
+        }
+        
+        @media (min-width: 768px) {
+            .month-section {
+                margin-bottom: 40px;
+            }
+            .month-title {
+                font-size: 1.75rem;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+            }
+        }
+        
+        .week {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 15px;
+        }
+        
+        @media (min-width: 768px) {
+            .week {
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+        }
+        
+        .day-header {
+            text-align: center;
+            font-weight: bold;
+            padding: 8px 4px;
+            background: #34495e;
+            color: white;
+            border-radius: 6px;
+            font-size: 0.75rem;
+        }
+        
+        @media (min-width: 768px) {
+            .day-header {
+                padding: 10px;
+                border-radius: 8px;
+                font-size: 0.875rem;
+            }
+        }
+        
+        .day {
+            min-height: 100px;
+            border: 1px solid #ecf0f1;
+            border-radius: 8px;
+            padding: 4px;
+            position: relative;
+            background: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        
+        @media (min-width: 768px) {
+            .day {
+                min-height: 140px;
+                border: 2px solid #ecf0f1;
+                border-radius: 12px;
+                padding: 8px;
+            }
+        }
+        
+        .day:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-color: #3498db;
+        }
+        
+        @media (min-width: 768px) {
+            .day:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            }
+        }
+        
+        .day.clickable {
+            border-color: #3498db;
+        }
+        
+        .day.clickable:hover {
+            background: #f8f9fa;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(52, 152, 219, 0.3);
+        }
+        
+        @media (min-width: 768px) {
+            .day.clickable:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 20px 40px rgba(52, 152, 219, 0.3);
+            }
+        }
+        
+        .day-number {
+            font-weight: bold;
+            font-size: 0.875rem;
+            margin-bottom: 3px;
+            color: #2c3e50;
+        }
+        
+        @media (min-width: 768px) {
+            .day-number {
+                font-size: 1rem;
+                margin-bottom: 5px;
+            }
+        }
+        
+        .activity {
+            font-size: 0.5rem;
+            line-height: 1.1;
+            margin-bottom: 1px;
+            padding: 1px 2px;
+            border-radius: 3px;
+            font-weight: 500;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        @media (min-width: 480px) {
+            .activity {
+                font-size: 0.6rem;
+                padding: 2px 3px;
+                margin-bottom: 2px;
+                border-radius: 4px;
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .activity {
+                font-size: 0.625rem;
+                padding: 2px 4px;
+                white-space: normal;
+                overflow: visible;
+                text-overflow: initial;
+            }
+        }
+        
+        .time {
+            font-size: 0.5rem;
+            color: #666;
+            font-weight: bold;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        @media (min-width: 768px) {
+            .time {
+                font-size: 0.6rem;
+            }
+        }
+        
+        /* Activity Types */
+        .pyramids { background: #f39c12; color: white; }
+        .fancy { background: #e74c3c; color: white; }
+        .food { background: #27ae60; color: white; }
+        .home { background: #95a5a6; color: white; }
+        .art { background: #9b59b6; color: white; }
+        .cinema { background: #34495e; color: white; }
+        .support { background: #e67e22; color: white; }
+        .choice { background: #1abc9c; color: white; }
+        .shopping { background: #f1c40f; color: #333; }
+        .fun { background: #ff6b81; color: white; }
+        .routine { background: #7fb3d3; color: white; }
+        
+        .empty-day {
+            background: #f8f9fa;
+            border-color: #dee2e6;
+            cursor: default;
+        }
+        .empty-day:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .car-day::after {
+            content: "🚗";
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            font-size: 0.75rem;
+        }
+        
+        @media (min-width: 768px) {
+            .car-day::after {
+                top: 5px;
+                right: 8px;
+                font-size: 0.75rem;
+            }
+        }
+        
+        .class-indicator {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 0.5rem;
+            background: #3498db;
+            color: white;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+        
+        @media (min-width: 768px) {
+            .class-indicator {
+                top: 3px;
+                left: 3px;
+                font-size: 0.6rem;
+                padding: 1px 3px;
+                border-radius: 3px;
+            }
+        }
+        
+        .legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 8px;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        @media (min-width: 768px) {
+            .legend {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 15px;
+                margin-top: 30px;
+                padding: 20px;
+                border-radius: 12px;
+            }
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+        }
+        
+        @media (min-width: 768px) {
+            .legend-item {
+                gap: 8px;
+                font-size: 0.75rem;
+            }
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        
+        @media (min-width: 768px) {
+            .legend-color {
+                width: 20px;
+                height: 20px;
+                border-radius: 4px;
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            animation: fadeIn 0.3s ease;
+            padding: 10px;
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10px auto;
+            padding: 20px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+        
+        @media (min-width: 768px) {
+            .modal {
+                padding: 0;
+            }
+            .modal-content {
+                margin: 5% auto;
+                padding: 30px;
+                border-radius: 20px;
+                max-width: 600px;
+                max-height: 80vh;
+                box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            }
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @media (min-width: 768px) {
+            .close {
+                font-size: 28px;
+                top: 15px;
+                right: 25px;
+            }
+        }
+        
+        .close:hover {
+            color: #e74c3c;
+        }
+        
+        .modal-header {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+            margin-right: 40px;
+        }
+        
+        @media (min-width: 768px) {
+            .modal-header {
+                margin-bottom: 20px;
+                padding-bottom: 15px;
+            }
+        }
+        
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0;
+            line-height: 1.3;
+        }
+        
+        @media (min-width: 768px) {
+            .modal-title {
+                font-size: 1.5rem;
+            }
+        }
+        
+        .modal-date {
+            font-size: 0.875rem;
+            color: #7f8c8d;
+            margin: 5px 0 0 0;
+        }
+        
+        @media (min-width: 768px) {
+            .modal-date {
+                font-size: 1rem;
+            }
+        }
+        
+        .calendar-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        
+        @media (min-width: 768px) {
+            .calendar-section {
+                padding: 20px;
+                border-radius: 12px;
+                margin: 20px 0;
+            }
+        }
+        
+        .calendar-section h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .calendar-section h3 {
+                margin-bottom: 15px;
+                font-size: 1.125rem;
+            }
+        }
+        
+        .field-group {
+            margin-bottom: 10px;
+        }
+        
+        @media (min-width: 768px) {
+            .field-group {
+                margin-bottom: 15px;
+            }
+        }
+        
+        .field-label {
+            font-weight: bold;
+            color: #34495e;
+            margin-bottom: 3px;
+            font-size: 0.875rem;
+        }
+        
+        @media (min-width: 768px) {
+            .field-label {
+                margin-bottom: 5px;
+                font-size: 1rem;
+            }
+        }
+        
+        .field-content {
+            background: white;
+            padding: 8px;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+        
+        @media (min-width: 768px) {
+            .field-content {
+                padding: 10px;
+                border-radius: 8px;
+                font-size: 0.875rem;
+            }
+        }
+        
+        .copy-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            margin-top: 5px;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+        
+        @media (min-width: 768px) {
+            .copy-btn {
+                padding: 8px 15px;
+                border-radius: 6px;
+                font-size: 0.75rem;
+            }
+        }
+        
+        .copy-btn:hover, .copy-btn:active {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+        
+        @media (min-width: 768px) {
+            .copy-btn:hover {
+                transform: translateY(-2px);
+            }
+        }
+        
+        .copy-btn.copied {
+            background: #27ae60;
+        }
+        
+        .notes-section, .booking-info {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-size: 0.875rem;
+        }
+        
+        @media (min-width: 768px) {
+            .notes-section, .booking-info {
+                padding: 15px;
+                border-radius: 8px;
+                margin: 15px 0;
+                font-size: 1rem;
+            }
+        }
+        
+        .notes-section {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .booking-info {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .notes-section h4, .booking-info h4 {
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .notes-section h4, .booking-info h4 {
+                margin-bottom: 10px;
+                font-size: 1.125rem;
+            }
+        }
+        
+        .notes-section h4 {
+            color: #856404;
+        }
+        
+        .booking-info h4 {
+            color: #0c5460;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .instruction {
+            text-align: center;
+            background: #e8f4fd;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+        }
+        
+        @media (min-width: 768px) {
+            .instruction {
+                padding: 15px;
+                border-radius: 10px;
+                margin-bottom: 20px;
+            }
+        }
+        
+        .instruction h3 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+        
+        @media (min-width: 768px) {
+            .instruction h3 {
+                margin-bottom: 8px;
+                font-size: 1.125rem;
+            }
+        }
+        
+        .instruction p {
+            margin: 0;
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+        
+        @media (min-width: 768px) {
+            .instruction p {
+                font-size: 1rem;
+            }
+        }
+        
+        /* Bottom summary styling */
+        .summary-info {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #666;
+            line-height: 1.5;
+            padding: 0 10px;
+        }
+        
+        @media (min-width: 768px) {
+            .summary-info {
+                margin-top: 30px;
+                font-size: 0.875rem;
+                padding: 0;
+            }
+        }
+        
+        .summary-info strong {
+            color: #2c3e50;
+        }
+        
+        /* Modal Mobile Improvements */
+        @media (max-width: 767px) {
+            .modal {
+                padding: 0;
+                align-items: flex-start;
+            }
+            
+            .modal-content {
+                margin: 0;
+                width: 100vw;
+                height: 100vh;
+                max-width: 100vw;
+                max-height: 100vh;
+                border-radius: 0;
+                padding: 20px;
+                padding-top: 60px;
+                overflow-y: auto;
+                position: relative;
+            }
+            
+            .close {
+                position: fixed;
+                top: 15px;
+                right: 15px;
+                background: rgba(255,255,255,0.9);
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+                z-index: 1001;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            }
+            
+            .modal-header {
+                margin-right: 60px;
+                margin-bottom: 20px;
+            }
+            
+            .field-content {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="header">🇪🇬 CAIRO MONTH PLANNER 💕<br>Sept 27 - Oct 31, 2025</h1>
+        
+        <div class="instruction">
+            <h3>📱 How to Use</h3>
+            <p>Click on any day to get complete Google Calendar details. Every day 8 AM - 8 PM planned!</p>
+        </div>
+        
+        <!-- SEPTEMBER 2025 -->
+        <div class="month-section">
+            <h2 class="month-title">📅 SEPTEMBER 2025 - Week 1: Soft Landing</h2>
+            <div class="week">
+                <div class="day-header">SUN</div>
+                <div class="day-header">MON</div>
+                <div class="day-header">TUE</div>
+                <div class="day-header">WED</div>
+                <div class="day-header">THU</div>
+                <div class="day-header">FRI</div>
+                <div class="day-header">SAT</div>
+            </div>
+            <div class="week">
+                <div class="day empty-day">
+                    <div class="day-number">1</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">2</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">3</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">4</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">5</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">6</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">7</div>
+                </div>
+            </div>
+            <div class="week">
+                <div class="day empty-day">
+                    <div class="day-number">8</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">9</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">10</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">11</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">12</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">13</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">14</div>
+                </div>
+            </div>
+            <div class="week">
+                <div class="day empty-day">
+                    <div class="day-number">15</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">16</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">17</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">18</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">19</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">20</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">21</div>
+                </div>
+            </div>
+            <div class="week">
+                <div class="day empty-day">
+                    <div class="day-number">22</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">23</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">24</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">25</div>
+                </div>
+                <div class="day empty-day">
+                    <div class="day-number">26</div>
+                </div>
+                <div class="day clickable" data-date="2025-09-27" data-event="arrival">
+                    <div class="day-number">27</div>
+                    <div class="activity home">8 AM: Pick up Suhaira</div>
+                    <div class="activity home">Morning: Room surprise</div>
+                    <div class="activity routine">Lunch: Order in together</div>
+                    <div class="activity routine">Afternoon: Netflix & rest</div>
+                    <div class="activity routine">8 PM: Drop her home</div>
+                    <div class="time">SAT - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-09-28" data-event="relaxed">
+                    <div class="class-indicator">Classes</div>
+                    <div class="day-number">28</div>
+                    <div class="activity routine">8 AM: Pick up for classes</div>
+                    <div class="activity routine">10-12:45: Her classes</div>
+                    <div class="activity routine">12:45-2: Lunch together</div>
+                    <div class="activity routine">2-2:50: Her class</div>
+                    <div class="activity home">3-8: Netflix & cooking</div>
+                    <div class="time">SUN - 8 AM - 8 PM</div>
+                </div>
+            </div>
+            <div class="week">
+                <div class="day clickable" data-date="2025-09-29" data-event="pizza">
+                    <div class="class-indicator">Classes</div>
+                    <div class="day-number">29</div>
+                    <div class="activity routine">8 AM: Pick up for classes</div>
+                    <div class="activity routine">11:30-12:45: University class</div>
+                    <div class="activity routine">12:45-3:30: Home & lunch</div>
+                    <div class="activity routine">3:30-4:45: University class</div>
+                    <div class="activity food">5-7 PM: Pizza Hut</div>
+                    <div class="time">MON - 8 AM - 8 PM</div>
+                </div>
+                <div class="day car-day clickable" data-date="2025-09-30" data-event="zitouni">
+                    <div class="class-indicator">Single Class</div>
+                    <div class="day-number">30</div>
+                    <div class="activity routine">8 AM: Pick up for class</div>
+                    <div class="activity routine">11:30-12:45: University class</div>
+                    <div class="activity routine">1-5:30: Home, get ready</div>
+                    <div class="activity fancy">6-8 PM: Zitouni dinner</div>
+                    <div class="time">TUE - 8 AM - 8 PM</div>
+                </div>
+                <div class="day empty-day"></div>
+                <div class="day empty-day"></div>
+                <div class="day empty-day"></div>
+                <div class="day empty-day"></div>
+                <div class="day empty-day"></div>
+            </div>
+        </div>
+
+        <!-- OCTOBER 2025 -->
+        <div class="month-section">
+            <h2 class="month-title">📅 OCTOBER 2025</h2>
+            
+            <!-- Week 1 -->
+            <div class="week">
+                <div class="day empty-day"></div>
+                <div class="day empty-day"></div>
+                <div class="day clickable" data-date="2025-10-01" data-event="grocery">
+                    <div class="class-indicator">Classes</div>
+                    <div class="day-number">1</div>
+                    <div class="activity routine">8 AM: Pick up for classes</div>
+                    <div class="activity routine">10-12:45: Her classes</div>
+                    <div class="activity routine">12:45-2: Lunch break</div>
+                    <div class="activity routine">2-2:50: Her class</div>
+                    <div class="activity home">3-6: Grocery & cook</div>
+                    <div class="activity routine">6-8: Netflix & cuddle</div>
+                    <div class="time">WED - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-02" data-event="coffee">
+                    <div class="class-indicator">Classes</div>
+                    <div class="day-number">2</div>
+                    <div class="activity routine">8 AM: Pick up for classes</div>
+                    <div class="activity routine">11:30-12:45: Her class</div>
+                    <div class="activity routine">12:45-3:30: Home & lunch</div>
+                    <div class="activity routine">3:30-4:45: Her class</div>
+                    <div class="activity home">5-7: Café & walk</div>
+                    <div class="activity routine">7-8: Dinner</div>
+                    <div class="time">THU - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-03" data-event="movies">
+                    <div class="day-number">3</div>
+                    <div class="activity routine">8 AM: Pick up friend</div>
+                    <div class="activity routine">8-12: Laundry & cleaning</div>
+                    <div class="activity routine">12-2: Lunch together</div>
+                    <div class="activity home">2-8: Movies & order in</div>
+                    <div class="time">FRI - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-04" data-event="cinema">
+                    <div class="day-number">4</div>
+                    <div class="activity routine">8 AM: Pick up Suhaira</div>
+                    <div class="activity routine">8-12: Breakfast & chill</div>
+                    <div class="activity routine">12-2: Lunch together</div>
+                    <div class="activity routine">2-6: Rest & prep</div>
+                    <div class="activity cinema">6-8: Horror movie</div>
+                    <div class="time">SAT - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-05" data-event="art">
+                    <div class="day-number">5</div>
+                    <div class="activity routine">8 AM: Pick up Suhaira</div>
+                    <div class="activity routine">8-10: Breakfast together</div>
+                    <div class="activity art">10 AM-4 PM: Art galleries</div>
+                    <div class="activity routine">4-6: Café she picks</div>
+                    <div class="activity routine">6-8: Dinner</div>
+                    <div class="time">SUN - 8 AM - 8 PM</div>
+                </div>
+            </div>
+            
+            <!-- Week 2 -->
+            <div class="week">
+                <div class="day clickable" data-date="2025-10-06" data-event="vectoria">
+                    <div class="class-indicator">Classes</div>
+                    <div class="day-number">6</div>
+                    <div class="activity routine">8 AM: Pick up for classes</div>
+                    <div class="activity routine">11:30-12:45: Her class</div>
+                    <div class="activity routine">12:45-3:30: Home & lunch</div>
+                    <div class="activity routine">3:30-4:45: Her class</div>
+                    <div class="activity shopping">5-6:30: VECTORIA dress</div>
+                    <div class="activity food">6:30-8: Broccar dinner</div>
+                    <div class="time">MON - 8 AM - 8 PM</div>
+                </div>
+                <div class="day car-day clickable" data-date="2025-10-07" data-event="pyramids">
+                    <div class="class-indicator">Skip Class</div>
+                    <div class="day-number">7</div>
+                    <div class="activity routine">8 AM: Pick up Suhaira</div>
+                    <div class="activity pyramids">8:30 AM-1 PM: PYRAMIDS!</div>
+                    <div class="activity food">1-2 PM: Lunch nearby</div>
+                    <div class="activity routine">3-6 PM: Back home, rest</div>
+                    <div class="activity routine">6-8 PM: Dinner & cuddle</div>
+                    <div class="time">TUE - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-08" data-event="sushi">
+                    <div class="class-indicator">Classes</div>
+                    <div class="day-number">8</div>
+                    <div class="activity routine">8 AM: Pick up for classes</div>
+                    <div class="activity routine">10-12:45: Her classes</div>
+                    <div class="activity routine">12:45-2: Lunch break</div>
+                    <div class="activity routine">2-2:50: Her class</div>
+                    <div class="activity food">3-5: Order sushi in</div>
+                    <div class="activity routine">5-8: Netflix binge</div>
+                    <div class="time">WED - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-09" data-event="thrift">
+                    <div class="class-indicator">Classes</div>
+                    <div class="day-number">9</div>
+                    <div class="activity routine">8 AM: Pick up for classes</div>
+                    <div class="activity routine">11:30-12:45: Her class</div>
+                    <div class="activity routine">12:45-2: Lunch together</div>
+                    <div class="activity shopping">2-5: Thrift stores</div>
+                    <div class="activity food">5-7: Ibn Al Sham</div>
+                    <div class="activity routine">7-8: Back home</div>
+                    <div class="time">THU - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-10" data-event="masterchef">
+                    <div class="day-number">10</div>
+                    <div class="activity routine">8 AM: Pick up Suhaira</div>
+                    <div class="activity routine">8-12: Prep ingredients</div>
+                    <div class="activity home">12-6: Master Chef game</div>
+                    <div class="activity routine">6-8: Judge dishes</div>
+                    <div class="time">FRI - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-11" data-event="pucca">
+                    <div class="day-number">11</div>
+                    <div class="activity routine">8 AM: Pick up Suhaira</div>
+                    <div class="activity routine">8-12: Lazy morning</div>
+                    <div class="activity routine">12-5: Drive to Madinaty</div>
+                    <div class="activity food">5-7:30: Pucca Ramen</div>
+                    <div class="activity routine">7:30-8: Drive back</div>
+                    <div class="time">SAT - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-12" data-event="amusement">
+                    <div class="day-number">12</div>
+                    <div class="activity routine">8 AM: Pick up Suhaira</div>
+                    <div class="activity routine">8-11: Breakfast & prep</div>
+                    <div class="activity fun">11 AM-6 PM: Amusement park</div>
+                    <div class="activity routine">6-8: Dinner nearby</div>
+                    <div class="time">SUN - 8 AM - 8 PM</div>
+                </div>
+            </div>
+            
+            <!-- Week 3 -->
+            <div class="week">
+                <div class="day car-day clickable" data-date="2025-10-13" data-event="adventure">
+                    <div class="class-indicator">Classes</div>
+                    <div class="day-number">13</div>
+                    <div class="activity routine">8 AM: Pick up for classes</div>
+                    <div class="activity routine">11:30-12:45: Her class</div>
+                    <div class="activity routine">12:45-3:30: Home & lunch</div>
+                    <div class="activity routine">3:30-4:45: Her class</div>
+                    <div class="activity fun">5-8: Adventure park</div>
+                    <div class="time">MON - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-14" data-event="support1">
+                    <div class="class-indicator">Single Class</div>
+                    <div class="day-number">14</div>
+                    <div class="activity routine">8 AM: Pick up for class</div>
+                    <div class="activity routine">11:30-12:45: Her class</div>
+                    <div class="activity support">1-3: Study support</div>
+                    <div class="activity support">3-5: Extra support</div>
+                    <div class="activity support">5-8: Comfort & care</div>
+                    <div class="time">TUE - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-15" data-event="blanket">
+                    <div class="class-indicator">Classes</div>
+                    <div class="day-number">15</div>
+                    <div class="activity routine">8 AM: Pick up for classes</div>
+                    <div class="activity routine">10-12:45: Her classes</div>
+                    <div class="activity routine">12:45-2: Lunch break</div>
+                    <div class="activity routine">2-2:50: Her class</div>
+                    <div class="activity home">3-8: Blanket fort build</div>
+                    <div class="time">WED - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-16" data-event="clay">
+                    <div class="class-indicator">Classes</div>
+                    <div class="day-number">16</div>
+                    <div class="activity routine">8 AM: Pick up for classes</div>
+                    <div class="activity routine">11:30-12:45: Her class</div>
+                    <div class="activity routine">12:45-3: Lunch & prep</div>
+                    <div class="activity art">3-6: Clay date activity</div>
+                    <div class="activity routine">6-8: Dinner & cleanup</div>
+                    <div class="time">THU - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-17" data-event="photobooth">
+                    <div class="day-number">17</div>
+                    <div class="activity routine">8 AM: Pick up Suhaira</div>
+                    <div class="activity routine">8-12: Set up photobooth</div>
+                    <div class="activity home">12-6: Photobooth pics</div>
+                    <div class="activity routine">6-8: Cook dinner</div>
+                    <div class="time">FRI - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-18" data-event="sushi2">
+                    <div class="day-number">18</div>
+                    <div class="activity routine">8 AM: Pick up Suhaira</div>
+                    <div class="activity routine">8-12: Lazy breakfast</div>
+                    <div class="activity routine">12-5: Rest together</div>
+                    <div class="activity food">5-7:30: Sushi dinner</div>
+                    <div class="activity routine">7:30-8: Back home</div>
+                    <div class="time">SAT - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-19" data-event="choice1">
+                    <div class="day-number">19</div>
+                    <div class="activity choice">8 AM: Pick up Suhaira</div>
+                    <div class="activity choice">ASK: "Where do you feel</div>
+                    <div class="activity choice">happiest taking me?"</div>
+                    <div class="activity choice">LET HER PLAN EVERYTHING</div>
+                    <div class="activity routine">Follow her lead</div>
+                    <div class="time">SUN - 8 AM - 8 PM</div>
+                </div>
+            </div>
+            
+            <!-- Week 4 -->
+            <div class="week">
+                <div class="day clickable" data-date="2025-10-20" data-event="boba">
+                    <div class="class-indicator">Classes</div>
+                    <div class="day-number">20</div>
+                    <div class="activity routine">8 AM: Pick up for classes</div>
+                    <div class="activity routine">11:30-12:45: Her class</div>
+                    <div class="activity routine">12:45-3:30: Home & lunch</div>
+                    <div class="activity routine">3:30-4:45: Her class</div>
+                    <div class="activity fun">5-6:30: Boba tea date</div>
+                    <div class="activity fun">6:30-8: Games (Instagram)</div>
+                    <div class="time">MON - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-21" data-event="support2">
+                    <div class="class-indicator">Single Class</div>
+                    <div class="day-number">21</div>
+                    <div class="activity routine">8 AM: Pick up for class</div>
+                    <div class="activity routine">11:30-12:45: Her class</div>
+                    <div class="activity support">1-3: Study support</div>
+                    <div class="activity support">3-5: Extra care</div>
+                    <div class="activity support">5-8: Support stress</div>
+                    <div class="time">TUE - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-22" data-event="mirror">
+                    <div class="class-indicator">Classes</div>
+                    <div class="day-number">22</div>
+                    <div class="activity routine">8 AM: Pick up for classes</div>
+                    <div class="activity routine">10-12:45: Her classes</div>
+                    <div class="activity routine">12:45-2: Lunch break</div>
+                    <div class="activity routine">2-2:50: Her class</div>
+                    <div class="activity home">3-8: Mirror activities</div>
+                    <div class="time">WED - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-23" data-event="pottery">
+                    <div class="class-indicator">Classes</div>
+                    <div class="day-number">23</div>
+                    <div class="activity routine">8 AM: Pick up for classes</div>
+                    <div class="activity routine">11:30-12:45: Her class</div>
+                    <div class="activity routine">12:45-2: Lunch & prep</div>
+                    <div class="activity art">2-6: Pottery class</div>
+                    <div class="activity routine">6-8: Dinner</div>
+                    <div class="time">THU - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-24" data-event="trends">
+                    <div class="day-number">24</div>
+                    <div class="activity routine">8 AM: Pick up Suhaira</div>
+                    <div class="activity routine">8-12: Lazy morning</div>
+                    <div class="activity home">12-6: Travel trends</div>
+                    <div class="activity routine">6-8: Chill together</div>
+                    <div class="time">FRI - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-25" data-event="conflict">
+                    <div class="day-number">25</div>
+                    <div class="activity routine">8 AM: Pick up Suhaira</div>
+                    <div class="activity routine">8-12: Breakfast together</div>
+                    <div class="activity home">12-6: Conflict resolution</div>
+                    <div class="activity routine">6-8: Communication</div>
+                    <div class="time">SAT - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-26" data-event="choice2">
+                    <div class="day-number">26</div>
+                    <div class="activity choice">8 AM: Pick up Suhaira</div>
+                    <div class="activity choice">Let her plan ENTIRE day</div>
+                    <div class="activity choice">Complete control to her</div>
+                    <div class="activity choice">Follow her choices</div>
+                    <div class="activity routine">Her perfect day</div>
+                    <div class="time">SUN - 8 AM - 8 PM</div>
+                </div>
+            </div>
+            
+            <!-- Week 5 -->
+            <div class="week">
+                <div class="day clickable" data-date="2025-10-27" data-event="todo">
+                    <div class="class-indicator">Classes</div>
+                    <div class="day-number">27</div>
+                    <div class="activity routine">8 AM: Pick up for classes</div>
+                    <div class="activity routine">11:30-12:45: Her class</div>
+                    <div class="activity routine">12:45-3:30: Home & lunch</div>
+                    <div class="activity routine">3:30-4:45: Her class</div>
+                    <div class="activity shopping">5-7: Shopping for me</div>
+                    <div class="activity home">7-8: TODO activities</div>
+                    <div class="time">MON - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-28" data-event="support3">
+                    <div class="class-indicator">Single Class</div>
+                    <div class="day-number">28</div>
+                    <div class="activity routine">8 AM: Pick up for class</div>
+                    <div class="activity routine">11:30-12:45: Her class</div>
+                    <div class="activity support">1-3: Final study support</div>
+                    <div class="activity support">3-5: Celebration prep</div>
+                    <div class="activity support">5-8: Celebrate finishing!</div>
+                    <div class="time">TUE - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-29" data-event="shirt">
+                    <div class="class-indicator">Classes</div>
+                    <div class="day-number">29</div>
+                    <div class="activity routine">8 AM: Pick up for classes</div>
+                    <div class="activity routine">10-12:45: Her classes</div>
+                    <div class="activity routine">12:45-2: Lunch break</div>
+                    <div class="activity routine">2-2:50: Her class</div>
+                    <div class="activity home">3-6: Shirt activity</div>
+                    <div class="activity routine">6-8: Relaxed evening</div>
+                    <div class="time">WED - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-30" data-event="memory">
+                    <div class="class-indicator">Classes</div>
+                    <div class="day-number">30</div>
+                    <div class="activity routine">8 AM: Pick up for classes</div>
+                    <div class="activity routine">11:30-12:45: Her class</div>
+                    <div class="activity routine">12:45-3: Lunch together</div>
+                    <div class="activity home">3-6: Memory making</div>
+                    <div class="activity home">6-8: Photo compilation</div>
+                    <div class="time">THU - 8 AM - 8 PM</div>
+                </div>
+                <div class="day clickable" data-date="2025-10-31" data-event="departure">
+                    <div class="day-number">31</div>
+                    <div class="activity routine">8 AM: Pick up one last time</div>
+                    <div class="activity routine">8-12: Pack together</div>
+                    <div class="activity routine">12-4: Final moments</div>
+                    <div class="activity routine">4-6: Last meal</div>
+                    <div class="activity routine">6-8: Emotional goodbye</div>
+                    <div class="time">FRI - 8 AM - 8 PM</div>
+                </div>
+                <div class="day empty-day"></div>
+                <div class="day empty-day"></div>
+            </div>
+        </div>
+        
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color pyramids"></div>
+                <span>Pyramids/Adventure</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color fancy"></div>
+                <span>Fancy Dining</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color food"></div>
+                <span>Food/Restaurants</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color home"></div>
+                <span>Home/Creative Activities</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color art"></div>
+                <span>Art/Creative</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color cinema"></div>
+                <span>Cinema/Movies</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color shopping"></div>
+                <span>Shopping/Markets</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color choice"></div>
+                <span>Her Choice Days</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color support"></div>
+                <span>Midterm Support</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color fun"></div>
+                <span>Fun Activities</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color routine"></div>
+                <span>Daily Routine</span>
+            </div>
+            <div class="legend-item">
+                <span>🚗 = Car Rental Day</span>
+            </div>
+            <div class="legend-item">
+                <span>Classes = Her University Schedule</span>
+            </div>
+        </div>
+        
+        <div class="summary-info">
+            <strong>Daily Schedule:</strong> 8 AM Pick up Suhaira → Full Day Together → 8 PM Drop off<br>
+            <strong>Emotional Safety Plan:</strong> Week 1 (Soft Landing) → Week 2 (Shared Joy) → Week 3+ (Her Lead & Support)<br>
+            <strong>Car Rental Days:</strong> Sept 30 (Zitouni), Oct 7 (Pyramids), Oct 13 (Adventure Park)<br>
+            <strong>All TODO List Items Included!</strong> Click any day for complete details
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle"></h2>
+                <p class="modal-date" id="modalDate"></p>
+            </div>
+            
+            <div class="calendar-section">
+                <h3>📅 Google Calendar Event Details</h3>
+                
+                <div class="field-group">
+                    <div class="field-label">Event Title:</div>
+                    <div class="field-content" id="eventTitle"></div>
+                    <button class="copy-btn" onclick="copyToClipboard('eventTitle')">Copy Title</button>
+                </div>
+                
+                <div class="field-group">
+                    <div class="field-label">Date:</div>
+                    <div class="field-content" id="eventDate"></div>
+                    <button class="copy-btn" onclick="copyToClipboard('eventDate')">Copy Date</button>
+                </div>
+                
+                <div class="field-group">
+                    <div class="field-label">Time:</div>
+                    <div class="field-content" id="eventTime"></div>
+                    <button class="copy-btn" onclick="copyToClipboard('eventTime')">Copy Time</button>
+                </div>
+                
+                <div class="field-group">
+                    <div class="field-label">Location:</div>
+                    <div class="field-content" id="eventLocation"></div>
+                    <button class="copy-btn" onclick="copyToClipboard('eventLocation')">Copy Location</button>
+                </div>
+                
+                <div class="field-group">
+                    <div class="field-label">Description:</div>
+                    <div class="field-content" id="eventDescription"></div>
+                    <button class="copy-btn" onclick="copyToClipboard('eventDescription')">Copy Description</button>
+                </div>
+            </div>
+
+            <div class="notes-section" id="notesSection">
+                <h4>📝 Important Notes</h4>
+                <div id="eventNotes"></div>
+            </div>
+
+            <div class="booking-info" id="bookingSection">
+                <h4>🎫 Booking Information</h4>
+                <div id="bookingInfo"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const eventData = {
+            'arrival': {
+                title: '✈️ Arrival Day + Room Surprise - Full Day Together',
+                time: '8:00 AM - 8:00 PM',
+                location: 'Airbnb, Cairo',
+                description: '8:00 AM: Pick up friend from home\n9:00-11:00 AM: Reveal decorated room surprise, breakfast together\n11:00 AM-1:00 PM: Rest and get comfortable, Netflix\n1:00-2:30 PM: Order lunch in together\n2:30-6:00 PM: Gentle time together, shows, cuddling\n6:00-7:30 PM: Dinner together (order in)\n7:30-8:00 PM: Prepare for drop off\n8:00 PM: Drop off at home\n\nEmotional Safety Focus: Soft landing, gentle start, comfortable environment',
+                notes: 'First day together - take it slow, let them see the room surprise, order favorite food, gentle and nurturing',
+                booking: 'No reservations needed - just rest day and room surprise'
+            },
+            'relaxed': {
+                title: '🏠 Relaxed Weekend - Netflix & Cooking',
+                time: '8:00 AM - 8:00 PM',
+                location: 'University + Airbnb',
+                description: '8:00 AM: Pick up for classes\n10:00-12:45 PM: University classes (wait nearby/home)\n12:45-2:00 PM: Lunch together between classes\n2:00-2:50 PM: University class (wait nearby)\n3:00-6:00 PM: Netflix & cooking at home\n6:00-8:00 PM: Dinner together, cuddle time\n8:00 PM: Drop off at home\n\nEmotional Safety Focus: Building domestic comfort, relaxed weekend',
+                notes: 'Let them choose what to cook and what to watch. Building domestic comfort.',
+                booking: 'Grocery ingredients ready\nNetflix setup'
+            },
+            'pizza': {
+                title: '🍕 Pizza Hut Surprise - Full Day with Classes',
+                time: '8:00 AM - 8:00 PM',
+                location: 'University + Pizza Hut + Home',
+                description: '8:00 AM: Pick up for classes\n11:30-12:45 PM: University class (wait nearby/home)\n12:45-3:30 PM: Home, lunch together, rest\n3:30-4:45 PM: University class (wait nearby/home)\n5:00-7:00 PM: Pizza Hut surprise - favorite place!\n7:00-8:00 PM: Back home, chill time\n8:00 PM: Drop off at home\n\nEmotional Safety Focus: Fun surprise, casual dining, building routine',
+                notes: 'Pizza Hut is a favorite! Make it a fun surprise. Find location near airbnb or university.',
+                booking: 'Find nearest Pizza Hut location\nNo reservation needed'
+            },
+            'zitouni': {
+                title: '🥂 Zitouni Fancy Dinner - Single Class Day',
+                time: '8:00 AM - 8:00 PM',
+                location: 'University + Four Seasons Hotel Cairo - Zitouni Restaurant',
+                description: '8:00 AM: Pick up for class\n11:30-12:45 PM: Single university class\n1:00-5:30 PM: Home, rest and get ready for fancy dinner\n5:30-6:00 PM: Drive to Zitouni\n6:00-8:00 PM: Fancy white tablecloth dinner at Zitouni\n8:00 PM: Drop off at home\n\nEmotional Safety Focus: Supporting schedule, fancy experience showing effort',
+                notes: 'CAR RENTAL DAY 1 - Single class day perfect for fancy dinner. White tablecloth, Nile views.',
+                booking: 'MUST BOOK: Zitouni Restaurant +20 (2) 2791 6877 for 6:00 PM\nCar rental needed'
+            },
+            'pyramids': {
+                title: '🏺 PYRAMIDS DAY - Skip Single Class for Morning Adventure',
+                time: '8:00 AM - 8:00 PM',
+                location: 'Pyramids of Giza, Egypt',
+                description: '8:00 AM: Pick up (SKIP SINGLE TUESDAY CLASS)\n8:30-9:30 AM: Drive to Pyramids (CAR RENTAL DAY 2)\n9:30 AM-1:00 PM: Explore Pyramids complex - morning is best!\n1:00-2:00 PM: Lunch at nearby restaurant\n2:00-3:00 PM: Drive back home\n3:00-6:00 PM: Rest at home, recover from adventure\n6:00-8:00 PM: Dinner together, cuddle time\n8:00 PM: Drop off at home\n\nEmotional Safety Focus: Skip only ONE class for special experience',
+                notes: 'CAR RENTAL DAY 2 - Perfect timing! Morning pyramids visit, only miss one class. Take lots of photos!',
+                booking: 'Book Pyramids tickets: egymonuments.gov.eg (EGP 700 entry + EGP 1000 Great Pyramid)\nCar rental needed\nRestaurant near pyramids'
+            }
+        };
+
+        // Modal functionality
+        const modal = document.getElementById('eventModal');
+        const closeBtn = document.getElementsByClassName('close')[0];
+
+        // Add click event listeners to all clickable days
+        document.querySelectorAll('.day.clickable').forEach(day => {
+            day.addEventListener('click', function() {
+                const eventType = this.getAttribute('data-event');
+                const date = this.getAttribute('data-date');
+                showEventDetails(eventType, date);
+            });
+        });
+
+        function showEventDetails(eventType, date) {
+            const event = eventData[eventType];
+            if (!event) {
+                alert('Event details coming soon! This day includes all the activities shown.');
+                return;
+            }
+
+            // Format date
+            const dateObj = new Date(date + 'T00:00:00');
+            const formattedDate = dateObj.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+
+            // Update modal content
+            document.getElementById('modalTitle').textContent = event.title;
+            document.getElementById('modalDate').textContent = formattedDate;
+            document.getElementById('eventTitle').textContent = event.title;
+            document.getElementById('eventDate').textContent = formattedDate;
+            document.getElementById('eventTime').textContent = event.time;
+            document.getElementById('eventLocation').textContent = event.location;
+            document.getElementById('eventDescription').textContent = event.description;
+            document.getElementById('eventNotes').textContent = event.notes;
+            document.getElementById('bookingInfo').textContent = event.booking;
+
+            modal.style.display = 'block';
+        }
+
+        // Close modal
+        closeBtn.onclick = function() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Copy to clipboard function
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            navigator.clipboard.writeText(text).then(function() {
+                const btn = element.nextElementSibling;
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                
+                setTimeout(function() {
+                    btn.textContent = originalText;
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>
